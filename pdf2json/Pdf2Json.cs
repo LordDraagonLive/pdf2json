@@ -51,45 +51,56 @@ namespace pdf2json
         private void filesLsBx_DoubleClick(object sender, EventArgs e)
         {
             System.Diagnostics.Process.Start(((KeyValuePair<string, string>)filesLsBx.SelectedItem).Value.ToString());
-            filesLsBx.ClearSelected();
+            //filesLsBx.ClearSelected();
         }
 
         private void genbtn_Click(object sender, EventArgs e)
         {
             if (userSelecctedDir != "")
             {
-                // get all form elements
-                var items = ActiveForm.Controls.Cast<Control>();
-                List<string> keys = new List<string>();
-                List<string> values = new List<string>();
-
-                foreach (var item in items)
+                try
                 {
-                    if (item.Tag != null)
+                    // get all form elements
+                    var items = ActiveForm.Controls.Cast<Control>();
+                    List<string> keys = new List<string>();
+                    List<string> values = new List<string>();
+
+                    foreach (var item in items)
                     {
-                        if (item.Tag.ToString() == "keys")
+                        if (item.Tag != null)
                         {
-                            keys.Add(item.Text.ToString());
+                            if (item.Tag.ToString() == "keys")
+                            {
+                                keys.Add(item.Text.ToString());
 
-                        }
-                        if (item.Tag.ToString() == "values")
-                        {
-                            values.Add(item.Text.ToString());
+                            }
+                            if (item.Tag.ToString() == "values")
+                            {
+                                values.Add(item.Text.ToString());
 
+                            }
                         }
                     }
+
+                    var keyValDic = keys.Zip(values, (k, v) => new { k, v })
+                                        .ToDictionary(x => x.k, x => x.v);
+                    //string path = Directory.GetParent(System.Reflection.Assembly.GetExecutingAssembly().Location).FullName;
+                    //string path = Application.StartupPath;
+                    //string folderPath = Path.Combine(path, "output");
+                    string createdFileName = Path.GetFileNameWithoutExtension(((KeyValuePair<string, string>)filesLsBx.SelectedItem).Value.ToString());
+
+                    string fullFileName = Path.Combine(userSelecctedDir, createdFileName + ".json");
+
+                    //System.IO.Directory.CreateDirectory(folderPath);
+                    string jsonOutput = JsonConvert.SerializeObject(keyValDic, Newtonsoft.Json.Formatting.Indented);
+                    System.IO.File.WriteAllText(fullFileName, jsonOutput);
+                    System.Windows.Forms.MessageBox.Show("JSON File Saved Successfully! : " + fullFileName, "Message");
+                }
+                catch (Exception ex)
+                {
+                    System.Windows.Forms.MessageBox.Show("JSON File Creation and Saving Failed! : " + ex.Message, "Error Message");
                 }
 
-                var keyValDic = keys.Zip(values, (k, v) => new { k, v })
-                                    .ToDictionary(x => x.k, x => x.v);
-                //string path = Directory.GetParent(System.Reflection.Assembly.GetExecutingAssembly().Location).FullName;
-                string path = Application.StartupPath;
-                string folderPath = Path.Combine(path, "output");
-                string fullFileName = Path.Combine(folderPath, "test.json");
-
-                System.IO.Directory.CreateDirectory(folderPath);
-                string jsonOutput = JsonConvert.SerializeObject(keyValDic, Newtonsoft.Json.Formatting.Indented);
-                System.IO.File.WriteAllText(fullFileName, jsonOutput);
             }
             else
             {

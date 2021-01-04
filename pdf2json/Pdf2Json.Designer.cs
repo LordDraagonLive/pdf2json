@@ -228,7 +228,7 @@ namespace pdf2json
             this.ForeColor = System.Drawing.Color.White;
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "Pdf2Json";
-            this.Text = "Form1";
+            this.Text = "PDf 2 JSON";
             this.ResumeLayout(false);
             this.PerformLayout();
 
