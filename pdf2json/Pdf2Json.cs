@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -13,6 +14,7 @@ namespace pdf2json
 {
     public partial class Pdf2Json : Form
     {
+        string userSelecctedDir = "";
         public Pdf2Json()
         {
             InitializeComponent();
@@ -27,6 +29,7 @@ namespace pdf2json
 
                 if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
                 {
+                    userSelecctedDir = fbd.SelectedPath;
                     string[] files = Directory.GetFiles(fbd.SelectedPath);
                     List<string> filesList = new List<string>(files);
                     var fileNameList = filesList.Select(x => { x = x.Split('\\').Last(); return x; }).ToList();
@@ -38,14 +41,62 @@ namespace pdf2json
                     filesLsBx.DisplayMember = "Key";
                     filesLsBx.ValueMember = "Value";
 
-                    //foreach (var file in files)
-                    //{
-                    //    System.Windows.Forms.MessageBox.Show("Files Path: " + file, "Message");
-                    //}
+                    filesLsBx.SelectionMode = SelectionMode.One;
 
                     System.Windows.Forms.MessageBox.Show("Files found: " + filesList.Count.ToString(), "Message");
                 }
             }
+        }
+
+        private void filesLsBx_DoubleClick(object sender, EventArgs e)
+        {
+            System.Diagnostics.Process.Start(((KeyValuePair<string, string>)filesLsBx.SelectedItem).Value.ToString());
+            filesLsBx.ClearSelected();
+        }
+
+        private void genbtn_Click(object sender, EventArgs e)
+        {
+            if (userSelecctedDir != "")
+            {
+                // get all form elements
+                var items = ActiveForm.Controls.Cast<Control>();
+                List<string> keys = new List<string>();
+                List<string> values = new List<string>();
+
+                foreach (var item in items)
+                {
+                    if (item.Tag != null)
+                    {
+                        if (item.Tag.ToString() == "keys")
+                        {
+                            keys.Add(item.Text.ToString());
+
+                        }
+                        if (item.Tag.ToString() == "values")
+                        {
+                            values.Add(item.Text.ToString());
+
+                        }
+                    }
+                }
+
+                var keyValDic = keys.Zip(values, (k, v) => new { k, v })
+                                    .ToDictionary(x => x.k, x => x.v);
+                //string path = Directory.GetParent(System.Reflection.Assembly.GetExecutingAssembly().Location).FullName;
+                string path = Application.StartupPath;
+                string folderPath = Path.Combine(path, "output");
+                string fullFileName = Path.Combine(folderPath, "test.json");
+
+                System.IO.Directory.CreateDirectory(folderPath);
+                string jsonOutput = JsonConvert.SerializeObject(keyValDic, Newtonsoft.Json.Formatting.Indented);
+                System.IO.File.WriteAllText(fullFileName, jsonOutput);
+            }
+            else
+            {
+                System.Windows.Forms.MessageBox.Show("Please select the PDFs Directory: ", "Message");
+            }
+
+
         }
     }
 }
